@@ -2,12 +2,12 @@
 """
 Title: ReportFeatureServices.py
 Description: Creates a log the Members found in AGOL for an organization and
-provides information about each member. In this version it looks at items and
-the groups the item is in.
-Version: 1.3
+provides information about each member's items. In this version, the csv contains
+username, item id, created date, modified date, title, and groups.
+Version: 1.4
 Author: Stephanie Wendel
 Created: 12/27/2013
-Updated: 6/17/2015
+Updated: 6/18/2015
 Tags: Log, AGOL, Admin Tasks, Membership information, Organization Information.
 """
 
@@ -121,7 +121,7 @@ Process item information per user. Contains information about groups item is
 shared with. CSV format
 """
 print 'Starting Membership log processing'
-MemberslogFile = createLog(OrgName, 'Membership', 'Username, itemid, Title, OtherGroup', '.csv')
+MemberslogFile = createLog(OrgName, 'Membership', 'Username, itemid, CreatedDate, ModifiedDate, Title, OtherGroup', '.csv')
 
 # Process the first 100 users
 users1 = orgUsers()['users']
@@ -133,12 +133,14 @@ for user in users1:
     for item in items:
         itemid = item['id']
         itemtitle = item['title']
+        itemcreateddate = time.strftime('%m/%d/%Y %H:%M:%S', time.gmtime(item['created']/1000))
+        itemmodifieddate = time.strftime('%m/%d/%Y %H:%M:%S', time.gmtime(item['modified']/1000))
         groupsobject = makeRequest("{0}/sharing/rest/content/items/{1}/groups".format(portalName, itemid))
         #print groupsobject
         otherlist = []
         for othervalue in groupsobject["other"]:
             otherlist.append(othervalue['title'])
-        Log(MemberslogFile, "{0}, {1}, {2}, {3}".format(username, itemid, itemtitle.encode('ascii','replace'), str(otherlist).replace(",",";")))
+        Log(MemberslogFile, "{0}, {1}, {2}, {3}, {4}, {5}".format(username, itemid, itemcreateddate, itemmodifieddate, itemtitle.encode('ascii','replace'), str(otherlist).replace(",",";")))
 
 # Process the rest of the users over 100
 newStart = 0
@@ -153,11 +155,13 @@ while totalusers > 100:
         for item2 in items2:
             itemid2 = item2['id']
             itemtitle2 = item2['title']
+            itemcreateddate2 = time.strftime('%m/%d/%Y %H:%M:%S', time.gmtime(item2['created']/1000))
+            itemmodifieddate2 = time.strftime('%m/%d/%Y %H:%M:%S', time.gmtime(item2['modified']/1000))
             groupsobject2 = makeRequest("{0}/sharing/rest/content/items/{1}/groups".format(portalName, itemid2))
             otherlist2 =[]
             for othervalue2 in groupsobject2["other"]:
                 otherlist2.append(othervalue2['title'])
-            Log(MemberslogFile, "{0}, {1}, {2}, {3}".format(username2, itemid2, itemtitle2, str(otherlist2).replace(",",";").encode('utf8', 'replace')))
+            Log(MemberslogFile, "{0}, {1}, {2}, {3}, {4}, {5}".format(username2, itemid2, itemcreateddate2, itemmodifieddate2, itemtitle2, str(otherlist2).replace(",",";").encode('utf8', 'replace')))
 
     totalusers -= 100
 
